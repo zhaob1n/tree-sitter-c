@@ -158,7 +158,7 @@ module.exports = grammar({
     ),
 
     _embed_parameter_token: $ => choice(
-      alias(token(prec(1, /[^()\n]+/)), $.preproc_arg),
+      alias(token(prec(-1, /[^()\n]+/)), $.preproc_arg),
       seq('(', repeat($._embed_parameter_token), ')'),
     ),
 
@@ -621,11 +621,11 @@ module.exports = grammar({
       'thread_local',
       '_Thread_local',
       '__thread',
+      'constexpr',
     ),
 
     type_qualifier: $ => choice(
       'const',
-      'constexpr',
       'volatile',
       'restrict',
       '__restrict__',
@@ -1477,6 +1477,8 @@ module.exports = grammar({
         )),
         // i/I/j/J: C2Y imaginary/complex suffixes (N3298), any order with f/l.
         /[uUlLwWfFbBdDiIjJ]*/,
+        // Rest of a pp-number (0offset, 0bxyz, 0xgg) stays one token.
+        optional(/[A-Za-z_$][A-Za-z0-9_$]*/),
       ));
     },
 

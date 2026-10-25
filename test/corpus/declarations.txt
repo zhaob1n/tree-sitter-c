@@ -750,7 +750,7 @@ noreturn void b() {}
       (identifier)
       (number_literal)))
   (declaration
-    (type_qualifier)
+    (storage_class_specifier)
     (primitive_type)
     (init_declarator
       (identifier)

@@ -296,7 +296,7 @@
             "type": "TOKEN",
             "content": {
               "type": "PREC",
-              "value": 1,
+              "value": -1,
               "content": {
                 "type": "PATTERN",
                 "value": "[^()\\n]+"
@@ -4886,6 +4886,10 @@
         {
           "type": "STRING",
           "value": "__thread"
+        },
+        {
+          "type": "STRING",
+          "value": "constexpr"
         }
       ]
     },
@@ -4895,10 +4899,6 @@
         {
           "type": "STRING",
           "value": "const"
-        },
-        {
-          "type": "STRING",
-          "value": "constexpr"
         },
         {
           "type": "STRING",
@@ -10203,6 +10203,18 @@
           {
             "type": "PATTERN",
             "value": "[uUlLwWfFbBdDiIjJ]*"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "[A-Za-z_$][A-Za-z0-9_$]*"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           }
         ]
       }

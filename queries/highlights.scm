@@ -6,6 +6,7 @@
 "break" @keyword
 "case" @keyword
 "const" @keyword
+"constexpr" @keyword
 "continue" @keyword
 "default" @keyword
 "defer" @keyword

@@ -432,3 +432,36 @@ int ctr = __COUNTER__;
     (init_declarator
       (identifier)
       (identifier))))
+
+================================================================================
+Preprocessing numbers stay one token
+================================================================================
+
+int a = 0offset;
+int b = 0bxyz;
+int c = 0xgg;
+int d = 0o;
+
+--------------------------------------------------------------------------------
+
+(translation_unit
+  (declaration
+    (primitive_type)
+    (init_declarator
+      (identifier)
+      (number_literal)))
+  (declaration
+    (primitive_type)
+    (init_declarator
+      (identifier)
+      (number_literal)))
+  (declaration
+    (primitive_type)
+    (init_declarator
+      (identifier)
+      (number_literal)))
+  (declaration
+    (primitive_type)
+    (init_declarator
+      (identifier)
+      (number_literal))))
