@@ -156,6 +156,10 @@
         "named": true
       },
       {
+        "type": "countof_expression",
+        "named": true
+      },
+      {
         "type": "extension_expression",
         "named": true
       },
@@ -200,7 +204,15 @@
         "named": true
       },
       {
+        "type": "pragma_operator",
+        "named": true
+      },
+      {
         "type": "sizeof_expression",
+        "named": true
+      },
+      {
+        "type": "static_assert_expression",
         "named": true
       },
       {
@@ -247,6 +259,10 @@
       },
       {
         "type": "continue_statement",
+        "named": true
+      },
+      {
+        "type": "defer_statement",
         "named": true
       },
       {
@@ -300,6 +316,14 @@
     "named": true,
     "subtypes": [
       {
+        "type": "atomic_type_specifier",
+        "named": true
+      },
+      {
+        "type": "bitint_type",
+        "named": true
+      },
+      {
         "type": "enum_specifier",
         "named": true
       },
@@ -321,6 +345,10 @@
       },
       {
         "type": "type_identifier",
+        "named": true
+      },
+      {
+        "type": "typeof_specifier",
         "named": true
       },
       {
@@ -434,6 +462,10 @@
       "required": false,
       "types": [
         {
+          "type": "attribute_declaration",
+          "named": true
+        },
+        {
           "type": "ms_pointer_modifier",
           "named": true
         },
@@ -497,6 +529,10 @@
         },
         {
           "type": "preproc_defined",
+          "named": true
+        },
+        {
+          "type": "system_lib_string",
           "named": true
         }
       ]
@@ -640,6 +676,22 @@
         "types": [
           {
             "type": "expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "atomic_type_specifier",
+    "named": true,
+    "fields": {
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "type_descriptor",
             "named": true
           }
         ]
@@ -886,9 +938,36 @@
     }
   },
   {
+    "type": "bitint_type",
+    "named": true,
+    "fields": {
+      "width": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "break_statement",
     "named": true,
-    "fields": {}
+    "fields": {
+      "label": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "statement_identifier",
+            "named": true
+          }
+        ]
+      }
+    }
   },
   {
     "type": "call_expression",
@@ -920,6 +999,16 @@
     "type": "case_statement",
     "named": true,
     "fields": {
+      "end_value": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
       "value": {
         "multiple": false,
         "required": false,
@@ -953,6 +1042,10 @@
         },
         {
           "type": "declaration",
+          "named": true
+        },
+        {
+          "type": "defer_statement",
           "named": true
         },
         {
@@ -1085,6 +1178,16 @@
     "type": "compound_literal_expression",
     "named": true,
     "fields": {
+      "storage_class": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "storage_class_specifier",
+            "named": true
+          }
+        ]
+      },
       "type": {
         "multiple": false,
         "required": true,
@@ -1133,6 +1236,10 @@
         },
         {
           "type": "preproc_def",
+          "named": true
+        },
+        {
+          "type": "preproc_embed",
           "named": true
         },
         {
@@ -1228,7 +1335,44 @@
   {
     "type": "continue_statement",
     "named": true,
-    "fields": {}
+    "fields": {
+      "label": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "statement_identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "countof_expression",
+    "named": true,
+    "fields": {
+      "type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_descriptor",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      }
+    }
   },
   {
     "type": "declaration",
@@ -1343,6 +1487,10 @@
           "named": true
         },
         {
+          "type": "preproc_embed",
+          "named": true
+        },
+        {
           "type": "preproc_function_def",
           "named": true
         },
@@ -1371,6 +1519,22 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "defer_statement",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "statement",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -1443,7 +1607,19 @@
         "required": false,
         "types": [
           {
+            "type": "bitint_type",
+            "named": true
+          },
+          {
             "type": "primitive_type",
+            "named": true
+          },
+          {
+            "type": "sized_type_specifier",
+            "named": true
+          },
+          {
+            "type": "type_identifier",
             "named": true
           }
         ]
@@ -2150,7 +2326,15 @@
         "required": true,
         "types": [
           {
-            "type": "parenthesized_expression",
+            "type": "comma_expression",
+            "named": true
+          },
+          {
+            "type": "declaration",
+            "named": true
+          },
+          {
+            "type": "expression",
             "named": true
           }
         ]
@@ -2161,6 +2345,16 @@
         "types": [
           {
             "type": "statement",
+            "named": true
+          }
+        ]
+      },
+      "initializer": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "declaration",
             "named": true
           }
         ]
@@ -2215,6 +2409,14 @@
         },
         {
           "type": "initializer_pair",
+          "named": true
+        },
+        {
+          "type": "preproc_call",
+          "named": true
+        },
+        {
+          "type": "preproc_embed",
           "named": true
         }
       ]
@@ -2615,6 +2817,10 @@
       "required": false,
       "types": [
         {
+          "type": "attribute_declaration",
+          "named": true
+        },
+        {
           "type": "ms_based_modifier",
           "named": true
         },
@@ -2654,6 +2860,26 @@
           {
             "type": "*",
             "named": false
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "pragma_operator",
+    "named": true,
+    "fields": {
+      "argument": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "concatenated_string",
+            "named": true
+          },
+          {
+            "type": "string_literal",
+            "named": true
           }
         ]
       }
@@ -2820,6 +3046,10 @@
           "named": true
         },
         {
+          "type": "preproc_embed",
+          "named": true
+        },
+        {
           "type": "preproc_function_def",
           "named": true
         },
@@ -2916,6 +3146,10 @@
           "named": true
         },
         {
+          "type": "preproc_embed",
+          "named": true
+        },
+        {
           "type": "preproc_function_def",
           "named": true
         },
@@ -2983,6 +3217,10 @@
           "named": true
         },
         {
+          "type": "preproc_embed",
+          "named": true
+        },
+        {
           "type": "preproc_function_def",
           "named": true
         },
@@ -3008,6 +3246,70 @@
         },
         {
           "type": "type_specifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "preproc_embed",
+    "named": true,
+    "fields": {
+      "path": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "call_expression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "string_literal",
+            "named": true
+          },
+          {
+            "type": "system_lib_string",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "preproc_embed_parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "preproc_embed_parameter",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "preproc_arg",
           "named": true
         }
       ]
@@ -3143,6 +3445,10 @@
           "named": true
         },
         {
+          "type": "preproc_embed",
+          "named": true
+        },
+        {
           "type": "preproc_function_def",
           "named": true
         },
@@ -3236,6 +3542,10 @@
         },
         {
           "type": "preproc_def",
+          "named": true
+        },
+        {
+          "type": "preproc_embed",
           "named": true
         },
         {
@@ -3465,6 +3775,36 @@
     }
   },
   {
+    "type": "static_assert_expression",
+    "named": true,
+    "fields": {
+      "condition": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
+      "message": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "concatenated_string",
+            "named": true
+          },
+          {
+            "type": "string_literal",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "storage_class_specifier",
     "named": true,
     "fields": {}
@@ -3604,7 +3944,7 @@
         "required": true,
         "types": [
           {
-            "type": "compound_statement",
+            "type": "statement",
             "named": true
           }
         ]
@@ -3614,7 +3954,25 @@
         "required": true,
         "types": [
           {
-            "type": "parenthesized_expression",
+            "type": "comma_expression",
+            "named": true
+          },
+          {
+            "type": "declaration",
+            "named": true
+          },
+          {
+            "type": "expression",
+            "named": true
+          }
+        ]
+      },
+      "initializer": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "declaration",
             "named": true
           }
         ]
@@ -3655,6 +4013,10 @@
           "named": true
         },
         {
+          "type": "defer_statement",
+          "named": true
+        },
+        {
           "type": "do_statement",
           "named": true
         },
@@ -3692,6 +4054,10 @@
         },
         {
           "type": "preproc_def",
+          "named": true
+        },
+        {
+          "type": "preproc_embed",
           "named": true
         },
         {
@@ -3819,6 +4185,25 @@
       "types": [
         {
           "type": "alignas_qualifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "typeof_specifier",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "expression",
+          "named": true
+        },
+        {
+          "type": "type_descriptor",
           "named": true
         }
       ]
@@ -4001,6 +4386,10 @@
   },
   {
     "type": "#else",
+    "named": false
+  },
+  {
+    "type": "#embed",
     "named": false
   },
   {
@@ -4224,7 +4613,27 @@
     "named": false
   },
   {
+    "type": "_BitInt",
+    "named": false
+  },
+  {
+    "type": "_Complex",
+    "named": false
+  },
+  {
+    "type": "_Countof",
+    "named": false
+  },
+  {
+    "type": "_Defer",
+    "named": false
+  },
+  {
     "type": "_Generic",
+    "named": false
+  },
+  {
+    "type": "_Imaginary",
     "named": false
   },
   {
@@ -4233,6 +4642,18 @@
   },
   {
     "type": "_Noreturn",
+    "named": false
+  },
+  {
+    "type": "_Pragma",
+    "named": false
+  },
+  {
+    "type": "_Static_assert",
+    "named": false
+  },
+  {
+    "type": "_Thread_local",
     "named": false
   },
   {
@@ -4328,6 +4749,18 @@
     "named": false
   },
   {
+    "type": "__typeof",
+    "named": false
+  },
+  {
+    "type": "__typeof__",
+    "named": false
+  },
+  {
+    "type": "__typeof_unqual__",
+    "named": false
+  },
+  {
     "type": "__unaligned",
     "named": false
   },
@@ -4394,6 +4827,10 @@
   },
   {
     "type": "default",
+    "named": false
+  },
+  {
+    "type": "defer",
     "named": false
   },
   {
@@ -4525,6 +4962,10 @@
     "named": false
   },
   {
+    "type": "static_assert",
+    "named": false
+  },
+  {
     "type": "string_content",
     "named": true
   },
@@ -4554,6 +4995,14 @@
   },
   {
     "type": "typedef",
+    "named": false
+  },
+  {
+    "type": "typeof",
+    "named": false
+  },
+  {
+    "type": "typeof_unqual",
     "named": false
   },
   {

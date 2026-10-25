@@ -8,6 +8,7 @@
 "const" @keyword
 "continue" @keyword
 "default" @keyword
+"defer" @keyword
 "do" @keyword
 "else" @keyword
 "enum" @keyword
@@ -18,12 +19,26 @@
 "return" @keyword
 "sizeof" @keyword
 "static" @keyword
+"static_assert" @keyword
 "struct" @keyword
 "switch" @keyword
 "typedef" @keyword
 "union" @keyword
 "volatile" @keyword
 "while" @keyword
+"_Countof" @keyword
+"_Defer" @keyword
+"_Pragma" @keyword
+"_Static_assert" @keyword
+"_Thread_local" @keyword
+"typeof" @keyword
+"typeof_unqual" @keyword
+"__typeof__" @keyword
+"__typeof" @keyword
+"__typeof_unqual__" @keyword
+
+"_BitInt" @type
+(bitint_type) @type
 
 "#define" @keyword
 "#elif" @keyword
@@ -33,6 +48,7 @@
 "#ifdef" @keyword
 "#ifndef" @keyword
 "#include" @keyword
+"#embed" @keyword
 (preproc_directive) @keyword
 
 "--" @operator
@@ -79,3 +95,6 @@
   name: (identifier) @function.special)
 
 (comment) @comment
+
+((identifier) @constant.builtin
+ (#eq? @constant.builtin "__COUNTER__"))

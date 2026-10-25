@@ -1,0 +1,239 @@
+================================================================================
+C99 complex, bool, and _Pragma
+================================================================================
+
+_Bool b;
+_Complex double cd;
+double _Complex cd2;
+long double _Complex ld;
+_Imaginary float im;
+_Pragma("once");
+
+--------------------------------------------------------------------------------
+
+(translation_unit
+  (declaration
+    (primitive_type)
+    (identifier))
+  (declaration
+    (sized_type_specifier
+      (primitive_type))
+    (identifier))
+  (declaration
+    (sized_type_specifier
+      (primitive_type))
+    (identifier))
+  (declaration
+    (sized_type_specifier
+      (primitive_type))
+    (identifier))
+  (declaration
+    (sized_type_specifier
+      (primitive_type))
+    (identifier))
+  (expression_statement
+    (pragma_operator
+      (string_literal
+        (string_content)))))
+
+================================================================================
+C11 _Thread_local and _Atomic type specifier
+================================================================================
+
+_Thread_local int tls;
+static _Thread_local int tls2;
+_Atomic(int) ai;
+_Atomic(int *) ap;
+_Atomic int ai2;
+
+--------------------------------------------------------------------------------
+
+(translation_unit
+  (declaration
+    (storage_class_specifier)
+    (primitive_type)
+    (identifier))
+  (declaration
+    (storage_class_specifier)
+    (storage_class_specifier)
+    (primitive_type)
+    (identifier))
+  (declaration
+    (atomic_type_specifier
+      (type_descriptor
+        (primitive_type)))
+    (identifier))
+  (declaration
+    (atomic_type_specifier
+      (type_descriptor
+        (primitive_type)
+        (abstract_pointer_declarator)))
+    (identifier))
+  (declaration
+    (type_qualifier)
+    (primitive_type)
+    (identifier)))
+
+================================================================================
+C23 typeof, auto, and attributes after star
+================================================================================
+
+typeof(int) ti;
+typeof(x + 1) z;
+typeof_unqual(const int) tu;
+__typeof__(x) g;
+auto x = 1;
+auto int y = 2;
+const auto *p = &x;
+int * [[maybe_unused]] q;
+void f(void) {
+  if (auto i = get()) use(i);
+}
+
+--------------------------------------------------------------------------------
+
+(translation_unit
+  (declaration
+    (typeof_specifier
+      (type_descriptor
+        (primitive_type)))
+    (identifier))
+  (declaration
+    (typeof_specifier
+      (binary_expression
+        (identifier)
+        (number_literal)))
+    (identifier))
+  (declaration
+    (typeof_specifier
+      (type_descriptor
+        (type_qualifier)
+        (primitive_type)))
+    (identifier))
+  (declaration
+    (typeof_specifier
+      (identifier))
+    (identifier))
+  (declaration
+    (primitive_type)
+    (init_declarator
+      (identifier)
+      (number_literal)))
+  (declaration
+    (storage_class_specifier)
+    (primitive_type)
+    (init_declarator
+      (identifier)
+      (number_literal)))
+  (declaration
+    (type_qualifier)
+    (primitive_type)
+    (init_declarator
+      (pointer_declarator
+        (identifier))
+      (pointer_expression
+        (identifier))))
+  (declaration
+    (primitive_type)
+    (pointer_declarator
+      (attribute_declaration
+        (attribute
+          (identifier)))
+      (identifier)))
+  (function_definition
+    (primitive_type)
+    (function_declarator
+      (identifier)
+      (parameter_list
+        (parameter_declaration
+          (primitive_type))))
+    (compound_statement
+      (if_statement
+        (declaration
+          (primitive_type)
+          (init_declarator
+            (identifier)
+            (call_expression
+              (identifier)
+              (argument_list))))
+        (expression_statement
+          (call_expression
+            (identifier)
+            (argument_list
+              (identifier))))))))
+
+================================================================================
+C23 float types, embed, and has_include
+================================================================================
+
+_Float32 f32;
+_Float64 f64;
+_Float128 f128;
+_Decimal32 d32;
+_Decimal64 d64;
+_Decimal128 d128;
+int emb[] = {
+#embed "file.bin" limit(4) if_empty(0)
+};
+#embed <data.h>
+#if __has_include(<stdio.h>)
+#endif
+#if __has_embed("file")
+#endif
+#if __has_c_attribute(nodiscard)
+#endif
+
+--------------------------------------------------------------------------------
+
+(translation_unit
+  (declaration
+    (primitive_type)
+    (identifier))
+  (declaration
+    (primitive_type)
+    (identifier))
+  (declaration
+    (primitive_type)
+    (identifier))
+  (declaration
+    (primitive_type)
+    (identifier))
+  (declaration
+    (primitive_type)
+    (identifier))
+  (declaration
+    (primitive_type)
+    (identifier))
+  (declaration
+    (primitive_type)
+    (init_declarator
+      (array_declarator
+        (identifier))
+      (initializer_list
+        (preproc_embed
+          (string_literal
+            (string_content))
+          (preproc_embed_parameter
+            (identifier)
+            (preproc_arg))
+          (preproc_embed_parameter
+            (identifier)
+            (preproc_arg))))))
+  (preproc_embed
+    (system_lib_string))
+  (preproc_if
+    (call_expression
+      (identifier)
+      (argument_list
+        (system_lib_string))))
+  (preproc_if
+    (call_expression
+      (identifier)
+      (argument_list
+        (string_literal
+          (string_content)))))
+  (preproc_if
+    (call_expression
+      (identifier)
+      (argument_list
+        (identifier)))))

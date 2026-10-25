@@ -53,6 +53,9 @@ module.exports = grammar({
     [$._top_level_item, $._top_level_statement],
     [$.type_specifier, $._top_level_expression_statement],
     [$.type_qualifier, $.extension_expression],
+    [$.sized_type_specifier, $._enum_underlying_type],
+    [$._initialized_condition_declaration, $._declaration_declarators],
+    [$.storage_class_specifier, $.type_specifier],
   ],
 
   extras: $ => [
@@ -97,6 +100,7 @@ module.exports = grammar({
       $.preproc_if,
       $.preproc_ifdef,
       $.preproc_include,
+      $.preproc_embed,
       $.preproc_def,
       $.preproc_function_def,
       $.preproc_call,
@@ -114,6 +118,7 @@ module.exports = grammar({
       $.preproc_if,
       $.preproc_ifdef,
       $.preproc_include,
+      $.preproc_embed,
       $.preproc_def,
       $.preproc_function_def,
       $.preproc_call,
@@ -130,6 +135,31 @@ module.exports = grammar({
         alias($.preproc_call_expression, $.call_expression),
       )),
       token.immediate(/\r?\n/),
+    ),
+
+    // C23 #embed. Parameters are limit/prefix/suffix/if_empty, each (balanced tokens).
+    preproc_embed: $ => seq(
+      preprocessor('embed'),
+      field('path', choice(
+        $.string_literal,
+        $.system_lib_string,
+        $.identifier,
+        alias($.preproc_call_expression, $.call_expression),
+      )),
+      repeat($.preproc_embed_parameter),
+      token.immediate(/\r?\n/),
+    ),
+
+    preproc_embed_parameter: $ => seq(
+      field('name', $.identifier),
+      '(',
+      repeat($._embed_parameter_token),
+      ')',
+    ),
+
+    _embed_parameter_token: $ => choice(
+      alias(token(prec(1, /[^()\n]+/)), $.preproc_arg),
+      seq('(', repeat($._embed_parameter_token), ')'),
     ),
 
     preproc_def: $ => seq(
@@ -199,7 +229,11 @@ module.exports = grammar({
 
     preproc_argument_list: $ => seq(
       '(',
-      commaSep($._preproc_expression),
+      commaSep(choice(
+        $._preproc_expression,
+        $.string_literal,
+        $.system_lib_string,
+      )),
       ')',
     ),
 
@@ -255,16 +289,34 @@ module.exports = grammar({
 
     declaration: $ => seq(
       $._declaration_specifiers,
-      commaSep1(field('declarator', choice(
-        seq(
-          optional($.ms_call_modifier),
-          $._declaration_declarator,
-          optional($.gnu_asm_expression),
-        ),
-        $.init_declarator,
-      ))),
+      $._declaration_declarators,
       ';',
     ),
+
+    // C2Y if/switch headers (N3356). The semicolon belongs to the header, not
+    // the declaration. Alias at the use site: aliasing the sequence itself
+    // splits the node.
+    _condition_declaration: $ => seq(
+      $._declaration_specifiers,
+      $._declaration_declarators,
+    ),
+
+    // Simple `if (declaration)` requires an initializer, so `if (a * b)` stays
+    // an expression. `if (foo * bar = 1)` is a declaration, same as `for`.
+    // The expression form is `if (foo * (bar = 1))`.
+    _initialized_condition_declaration: $ => seq(
+      $._declaration_specifiers,
+      commaSep1(field('declarator', $.init_declarator)),
+    ),
+
+    _declaration_declarators: $ => commaSep1(field('declarator', choice(
+      seq(
+        optional($.ms_call_modifier),
+        $._declaration_declarator,
+        optional($.gnu_asm_expression),
+      ),
+      $.init_declarator,
+    ))),
 
     type_definition: $ => seq(
       optional('__extension__'),
@@ -449,6 +501,7 @@ module.exports = grammar({
     pointer_declarator: $ => prec.dynamic(1, prec.right(seq(
       optional($.ms_based_modifier),
       '*',
+      repeat($.attribute_declaration),
       repeat($.ms_pointer_modifier),
       repeat($.type_qualifier),
       field('declarator', $._declarator),
@@ -456,6 +509,7 @@ module.exports = grammar({
     pointer_field_declarator: $ => prec.dynamic(1, prec.right(seq(
       optional($.ms_based_modifier),
       '*',
+      repeat($.attribute_declaration),
       repeat($.ms_pointer_modifier),
       repeat($.type_qualifier),
       field('declarator', $._field_declarator),
@@ -463,11 +517,13 @@ module.exports = grammar({
     pointer_type_declarator: $ => prec.dynamic(1, prec.right(seq(
       optional($.ms_based_modifier),
       '*',
+      repeat($.attribute_declaration),
       repeat($.ms_pointer_modifier),
       repeat($.type_qualifier),
       field('declarator', $._type_declarator),
     ))),
     abstract_pointer_declarator: $ => prec.dynamic(1, prec.right(seq('*',
+      repeat($.attribute_declaration),
       repeat($.ms_pointer_modifier),
       repeat($.type_qualifier),
       field('declarator', optional($._abstract_declarator)),
@@ -563,6 +619,7 @@ module.exports = grammar({
       '__inline__',
       '__forceinline',
       'thread_local',
+      '_Thread_local',
       '__thread',
     ),
 
@@ -594,7 +651,39 @@ module.exports = grammar({
       $.macro_type_specifier,
       $.sized_type_specifier,
       $.primitive_type,
+      $.bitint_type,
+      $.typeof_specifier,
+      $.atomic_type_specifier,
+      alias('auto', $.primitive_type),
       $._type_identifier,
+    ),
+
+    // C23 _BitInt, also the underlying type of a C2Y bit-precise enum (N3705).
+    bitint_type: $ => seq(
+      optional(choice('signed', 'unsigned')),
+      '_BitInt',
+      '(',
+      field('width', $.expression),
+      ')',
+    ),
+
+    // C23 typeof / typeof_unqual. GNU spellings are the pre-standard form.
+    typeof_specifier: $ => seq(
+      choice('typeof', 'typeof_unqual', '__typeof__', '__typeof', '__typeof_unqual__'),
+      '(',
+      choice(
+        $.expression,
+        prec.dynamic(-1, $.type_descriptor),
+      ),
+      ')',
+    ),
+
+    // C11 type-specifier form. `_Atomic int` stays a qualifier.
+    atomic_type_specifier: $ => seq(
+      '_Atomic',
+      '(',
+      field('type', $.type_descriptor),
+      ')',
     ),
 
     sized_type_specifier: $ => choice(
@@ -604,6 +693,8 @@ module.exports = grammar({
           'unsigned',
           'long',
           'short',
+          '_Complex',
+          '_Imaginary',
         )),
         field('type', optional(choice(
           prec.dynamic(-1, $._type_identifier),
@@ -614,6 +705,8 @@ module.exports = grammar({
           'unsigned',
           'long',
           'short',
+          '_Complex',
+          '_Imaginary',
         )),
       ),
       seq(
@@ -622,6 +715,8 @@ module.exports = grammar({
           'unsigned',
           'long',
           'short',
+          '_Complex',
+          '_Imaginary',
         )),
         repeat($.type_qualifier),
         field('type', optional(choice(
@@ -633,17 +728,28 @@ module.exports = grammar({
           'unsigned',
           'long',
           'short',
+          '_Complex',
+          '_Imaginary',
         )),
       ),
     ),
 
     primitive_type: _ => token(choice(
       'bool',
+      '_Bool',
       'char',
       'int',
       'float',
       'double',
       'void',
+      '_Float32',
+      '_Float64',
+      '_Float32x',
+      '_Float64x',
+      '_Float128',
+      '_Decimal32',
+      '_Decimal64',
+      '_Decimal128',
       'size_t',
       'ssize_t',
       'ptrdiff_t',
@@ -662,12 +768,24 @@ module.exports = grammar({
       choice(
         seq(
           field('name', $._type_identifier),
-          optional(seq(':', field('underlying_type', $.primitive_type))),
+          optional(seq(':', field('underlying_type', $._enum_underlying_type))),
           field('body', optional($.enumerator_list)),
+        ),
+        seq(
+          ':',
+          field('underlying_type', $._enum_underlying_type),
+          field('body', $.enumerator_list),
         ),
         field('body', $.enumerator_list),
       ),
       optional($.attribute_specifier),
+    ),
+
+    _enum_underlying_type: $ => choice(
+      $.primitive_type,
+      $.sized_type_specifier,
+      $.bitint_type,
+      $._type_identifier,
     ),
 
     enumerator_list: $ => seq(
@@ -792,6 +910,7 @@ module.exports = grammar({
       $.compound_statement,
       $.expression_statement,
       $.if_statement,
+      $.defer_statement,
       $.switch_statement,
       $.do_statement,
       $.while_statement,
@@ -811,6 +930,7 @@ module.exports = grammar({
       $.compound_statement,
       alias($._top_level_expression_statement, $.expression_statement),
       $.if_statement,
+      $.defer_statement,
       $.switch_statement,
       $.do_statement,
       $.while_statement,
@@ -843,22 +963,50 @@ module.exports = grammar({
 
     if_statement: $ => prec.right(seq(
       'if',
-      field('condition', $.parenthesized_expression),
+      choice(
+        field('condition', $.parenthesized_expression),
+        prec.dynamic(-1, seq('(', $._selection_header, ')')),
+      ),
       field('consequence', $.statement),
       optional(field('alternative', $.else_clause)),
     )),
 
     else_clause: $ => seq('else', $.statement),
 
+    // C2Y defer (TS 25755 / N3734). `_Defer` is the keyword; `defer` is the
+    // spelling used by the draft and by <stddefer.h>-style code.
+    defer_statement: $ => prec.right(seq(
+      choice('_Defer', 'defer'),
+      field('body', $.statement),
+    )),
+
     switch_statement: $ => seq(
       'switch',
-      field('condition', $.parenthesized_expression),
-      field('body', $.compound_statement),
+      choice(
+        field('condition', $.parenthesized_expression),
+        prec.dynamic(-1, seq('(', $._selection_header, ')')),
+      ),
+      field('body', $.statement),
+    ),
+
+    // Two-clause form first so the semicolon is not lost to the simple form.
+    _selection_header: $ => choice(
+      seq(
+        field('initializer', alias($._condition_declaration, $.declaration)),
+        ';',
+        field('condition', choice($.expression, $.comma_expression)),
+      ),
+      field('condition', alias($._initialized_condition_declaration, $.declaration)),
     ),
 
     case_statement: $ => prec.right(seq(
       choice(
-        seq('case', field('value', $.expression)),
+        seq(
+          'case',
+          field('value', $.expression),
+          // C2Y case ranges (N3370). Whitespace around `...` is required by the standard.
+          optional(seq('...', field('end_value', $.expression))),
+        ),
         'default',
       ),
       ':',
@@ -906,12 +1054,16 @@ module.exports = grammar({
       ';',
     ),
 
-    break_statement: _ => seq(
-      'break', ';',
+    break_statement: $ => seq(
+      'break',
+      optional(field('label', $._statement_identifier)),
+      ';',
     ),
 
-    continue_statement: _ => seq(
-      'continue', ';',
+    continue_statement: $ => seq(
+      'continue',
+      optional(field('label', $._statement_identifier)),
+      ';',
     ),
 
     goto_statement: $ => seq(
@@ -956,9 +1108,12 @@ module.exports = grammar({
       $.cast_expression,
       $.pointer_expression,
       $.sizeof_expression,
+      $.countof_expression,
       $.alignof_expression,
       $.offsetof_expression,
       $.generic_expression,
+      $.static_assert_expression,
+      $.pragma_operator,
       $.subscript_expression,
       $.call_expression,
       $.field_expression,
@@ -1094,6 +1249,15 @@ module.exports = grammar({
       ),
     )),
 
+    // C2Y _Countof (N3369 / N3469). Same operand shapes as sizeof.
+    countof_expression: $ => prec(PREC.SIZEOF, seq(
+      '_Countof',
+      choice(
+        field('value', $.expression),
+        seq('(', field('type', $.type_descriptor), ')'),
+      ),
+    )),
+
     alignof_expression: $ => prec(PREC.SIZEOF, seq(
       choice('__alignof__', '__alignof', '_alignof', 'alignof', '_Alignof'),
       seq('(', field('type', $.type_descriptor), ')'),
@@ -1107,9 +1271,26 @@ module.exports = grammar({
     generic_expression: $ => prec(PREC.CALL, seq(
       '_Generic',
       '(',
-      $.expression,
+      // N3260: the controlling operand may be a type. Prefer an expression when both match.
+      choice(
+        $.expression,
+        prec.dynamic(-1, $.type_descriptor),
+      ),
       ',',
-      commaSep1(seq($.type_descriptor, ':', $.expression)),
+      commaSep1(choice(
+        seq($.type_descriptor, ':', $.expression),
+        seq('default', ':', $.expression),
+      )),
+      ')',
+    )),
+
+    // C2Y static assertions in expressions (N3715). Also covers the declaration form
+    // `static_assert(...);`, which is an expression statement.
+    static_assert_expression: $ => prec(PREC.CALL, seq(
+      choice('static_assert', '_Static_assert'),
+      '(',
+      field('condition', $.expression),
+      optional(seq(',', field('message', $._string))),
       ')',
     )),
 
@@ -1196,6 +1377,14 @@ module.exports = grammar({
 
     extension_expression: $ => seq('__extension__', $.expression),
 
+    // C99 _Pragma operator.
+    pragma_operator: $ => prec(PREC.CALL, seq(
+      '_Pragma',
+      '(',
+      field('argument', $._string),
+      ')',
+    )),
+
     // The compound_statement is added to parse macros taking statements as arguments, e.g. MYFORLOOP(1, 10, i, { foo(i); bar(i); })
     argument_list: $ => seq('(', commaSep(choice($.expression, $.compound_statement)), ')'),
 
@@ -1209,6 +1398,8 @@ module.exports = grammar({
 
     compound_literal_expression: $ => seq(
       '(',
+      // N3871: storage-class specifiers in compound literals.
+      field('storage_class', repeat($.storage_class_specifier)),
       field('type', $.type_descriptor),
       ')',
       field('value', $.initializer_list),
@@ -1226,6 +1417,8 @@ module.exports = grammar({
         $.initializer_pair,
         $.expression,
         $.initializer_list,
+        $.preproc_embed,
+        $.preproc_call,
       )),
       optional(','),
       '}',
@@ -1262,12 +1455,13 @@ module.exports = grammar({
       const decimalDigits = seq(repeat1(decimal), repeat(seq(separator, repeat1(decimal))));
       return token(seq(
         optional(/[-\+]/),
-        optional(choice(/0[xX]/, /0[bB]/)),
+        optional(choice(/0[xX]/, /0[bB]/, /0[oO]/)),
         choice(
           seq(
             choice(
               decimalDigits,
               seq(/0[bB]/, decimalDigits),
+              seq(/0[oO]/, decimalDigits),
               seq(/0[xX]/, hexDigits),
             ),
             optional(seq('.', optional(hexDigits))),
@@ -1281,7 +1475,8 @@ module.exports = grammar({
             hexDigits,
           )),
         )),
-        /[uUlLwWfFbBdD]*/,
+        // i/I/j/J: C2Y imaginary/complex suffixes (N3298), any order with f/l.
+        /[uUlLwWfFbBdDiIjJ]*/,
       ));
     },
 
@@ -1317,6 +1512,10 @@ module.exports = grammar({
     escape_sequence: _ => token(prec(1, seq(
       '\\',
       choice(
+        // C2Y delimited escapes (N3353): \o{}, \x{}, \u{}. Longer forms first.
+        /x\{[0-9a-fA-F]+\}/,
+        /u\{[0-9a-fA-F]+\}/,
+        /o\{[0-7]+\}/,
         /[^xuU]/,
         /\d{2,3}/,
         /x[0-9a-fA-F]{1,4}/,
@@ -1336,7 +1535,7 @@ module.exports = grammar({
     null: _ => choice('NULL', 'nullptr'),
 
     identifier: _ =>
-      /(\p{XID_Start}|\$|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})(\p{XID_Continue}|\$|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8})*/,
+      /(\p{XID_Start}|\$|_|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8}|\\u\{[0-9A-Fa-f]+\})(\p{XID_Continue}|\$|\\u[0-9A-Fa-f]{4}|\\U[0-9A-Fa-f]{8}|\\u\{[0-9A-Fa-f]+\})*/,
 
     _type_identifier: $ => alias(
       $.identifier,
